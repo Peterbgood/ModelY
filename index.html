@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Lease Mileage Calculator</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .calculator-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">Tesla Lease Mileage Calculator</h2>
+            </div>
+            <div class="card-body">
+                <form id="mileageForm">
+                    <div class="mb-3">
+                        <label for="currentMiles" class="form-label">Current Odometer Reading:</label>
+                        <input type="number" class="form-control" id="currentMiles" 
+                            placeholder="Enter current mileage" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Calculate Mileage</button>
+                </form>
+                
+                <div id="results" class="mt-4 d-none">
+                    <div class="alert" id="resultAlert" role="alert">
+                        <h4 class="alert-heading">Mileage Status</h4>
+                        <p id="mileageResult"></p>
+                        <p id="dailyStatus"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                Lease Start: Jan 21, 2025 | 3-Year Term | 12,000 miles/year
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('mileageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Fixed values
+            const yearlyMiles = 12000;
+            const leaseYears = 3;
+            const currentMiles = parseFloat(document.getElementById('currentMiles').value);
+            
+            // Calculate total allowed miles for the lease
+            const totalAllowedMiles = yearlyMiles * leaseYears;
+            
+            // Calculate days since lease start (Jan 21, 2025 to March 5, 2025)
+            const startDate = new Date('2025-01-21');
+            const currentDate = new Date('2025-03-05'); // Fixed date as specified
+            const daysPassed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+            
+            // Calculate allowed miles to date
+            const dailyAllowance = yearlyMiles / 365;
+            const allowedMilesToDate = dailyAllowance * daysPassed;
+            
+            // Calculate mileage difference
+            const mileDifference = currentMiles - allowedMilesToDate;
+            const isOver = mileDifference > 0;
+            
+            // Update results
+            const resultAlert = document.getElementById('resultAlert');
+            const mileageResult = document.getElementById('mileageResult');
+            const dailyStatus = document.getElementById('dailyStatus');
+            const resultsDiv = document.getElementById('results');
+            
+            // Show results
+            resultsDiv.classList.remove('d-none');
+            resultAlert.classList.remove('alert-success', 'alert-danger');
+            resultAlert.classList.add(isOver ? 'alert-danger' : 'alert-success');
+            
+            mileageResult.textContent = `You are ${Math.abs(mileDifference.toFixed(1))} miles 
+                ${isOver ? 'over' : 'under'} your allowed mileage to date.`;
+            dailyStatus.textContent = `Daily allowance: ${dailyAllowance.toFixed(1)} miles/day | 
+                Days since lease start: ${daysPassed}`;
+        });
+    </script>
+</body>
+</html>
