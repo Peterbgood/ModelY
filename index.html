@@ -28,7 +28,7 @@
                     <div class="mb-3">
                         <label for="currentMiles" class="form-label">Current Odometer Reading:</label>
                         <input type="number" class="form-control" id="currentMiles" 
-                            placeholder="Enter current mileage" required>
+                            placeholder="Enter current mileage" min="0" step="1" required>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Calculate Mileage</button>
                 </form>
@@ -38,6 +38,7 @@
                         <h4 class="alert-heading">Mileage Status</h4>
                         <p id="mileageResult"></p>
                         <p id="dailyStatus"></p>
+                        <p id="remainingMiles"></p>
                     </div>
                 </div>
             </div>
@@ -53,34 +54,36 @@
         document.getElementById('mileageForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Fixed values
+            // Fixed lease parameters
             const yearlyMiles = 12000;
             const leaseYears = 3;
+            const totalAllowedMiles = yearlyMiles * leaseYears;
             const currentMiles = parseFloat(document.getElementById('currentMiles').value);
             
-            // Calculate total allowed miles for the lease
-            const totalAllowedMiles = yearlyMiles * leaseYears;
+            // Calculate days passed (Jan 21, 2025 to current date in ET)
+            const startDate = new Date('2025-01-21T00:00:00-05:00'); // ET is UTC-5
+            const currentDate = new Date('2025-03-06T00:00:00-05:00'); // Today's date in ET
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const daysPassed = Math.floor((currentDate - startDate) / msPerDay);
+            const totalLeaseDays = 365 * leaseYears; // Accounting for non-leap years
             
-            // Calculate days since lease start (Jan 21, 2025 to March 5, 2025)
-            const startDate = new Date('2025-01-21');
-            const currentDate = new Date('2025-03-05'); // Fixed date as specified
-            const daysPassed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
-            
-            // Calculate allowed miles to date
+            // Calculate mileage metrics
             const dailyAllowance = yearlyMiles / 365;
             const allowedMilesToDate = dailyAllowance * daysPassed;
-            
-            // Calculate mileage difference
             const mileDifference = currentMiles - allowedMilesToDate;
             const isOver = mileDifference > 0;
+            const remainingDays = totalLeaseDays - daysPassed;
+            const remainingAllowedMiles = totalAllowedMiles - currentMiles;
+            const remainingDailyAverage = remainingDays > 0 ? remainingAllowedMiles / remainingDays : 0;
             
-            // Update results
+            // Update UI elements
             const resultAlert = document.getElementById('resultAlert');
             const mileageResult = document.getElementById('mileageResult');
             const dailyStatus = document.getElementById('dailyStatus');
+            const remainingMiles = document.getElementById('remainingMiles');
             const resultsDiv = document.getElementById('results');
             
-            // Show results
+            // Display results
             resultsDiv.classList.remove('d-none');
             resultAlert.classList.remove('alert-success', 'alert-danger');
             resultAlert.classList.add(isOver ? 'alert-danger' : 'alert-success');
@@ -89,6 +92,8 @@
                 ${isOver ? 'over' : 'under'} your allowed mileage to date.`;
             dailyStatus.textContent = `Daily allowance: ${dailyAllowance.toFixed(1)} miles/day | 
                 Days since lease start: ${daysPassed}`;
+            remainingMiles.textContent = `Remaining: ${remainingAllowedMiles.toFixed(1)} miles 
+                (${remainingDailyAverage.toFixed(1)} miles/day average for ${remainingDays} days)`;
         });
     </script>
 </body>
