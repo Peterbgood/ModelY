@@ -62,7 +62,8 @@
             
             // Calculate days passed (Jan 21, 2025 to current date in ET)
             const startDate = new Date('2025-01-21T00:00:00-05:00'); // ET is UTC-5
-            const currentDate = new Date('2025-03-06T00:00:00-05:00'); // Today's date in ET
+            const currentDate = new Date(); // Use current date/time
+            currentDate.setHours(0, 0, 0, 0); // Set to midnight ET
             const msPerDay = 1000 * 60 * 60 * 24;
             const daysPassed = Math.floor((currentDate - startDate) / msPerDay);
             const totalLeaseDays = 365 * leaseYears; // Accounting for non-leap years
