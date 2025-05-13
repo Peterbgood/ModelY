@@ -27,8 +27,16 @@
                 <form id="mileageForm">
                     <div class="mb-3">
                         <label for="currentMiles" class="form-label">Current Odometer Reading:</label>
-                        <input type="number" class="form-control" id="currentMiles" 
-                            placeholder="Enter current mileage" min="0" step="1" required>
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            id="currentMiles" 
+                            inputmode="numeric"
+                            placeholder="Enter current mileage" 
+                            min="0" 
+                            step="1" 
+                            required
+                        >
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Calculate Mileage</button>
                 </form>
