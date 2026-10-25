@@ -1,109 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tesla Lease Mileage Calculator</title>
-    <!-- Bootstrap 5.3 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            padding: 20px;
-        }
-        .calculator-container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Y Lease — Am I on track with my miles?</title>
+<style>
+  :root{
+    --red:#e82127;
+    --ink:#171a20;
+    --muted:#5c5e62;
+    --line:#e8e8e8;
+    --bg:#f4f4f4;
+    --card:#ffffff;
+    --green:#0a7d42;
+    --green-bg:#e6f4ec;
+    --red-dark:#b00020;
+    --red-bg:#fdecec;
+    --amber:#9a6a00;
+    --amber-bg:#fff4d6;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+
+  /* ---------- Header ---------- */
+  header{text-align:center;padding:18px 8px 6px}
+  .car{font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--red)}
+  h1{font-size:30px;line-height:1.15;margin:8px 0 8px;font-weight:700}
+  .sub{color:var(--muted);font-size:16px;margin:0 auto;max-width:440px;line-height:1.45}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0 4px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:7px 13px;font-size:13.5px;color:var(--ink)}
+  .chip b{font-weight:700}
+
+  /* ---------- Cards ---------- */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 2px 14px rgba(0,0,0,.06);
+    padding:22px;margin-top:16px}
+  label{display:block;font-size:17px;font-weight:700;margin-bottom:4px}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 14px;line-height:1.45}
+
+  .input-row{display:flex;gap:10px}
+  .input-wrap{position:relative;flex:1}
+  input[type=number]{
+    width:100%;font-size:24px;font-weight:700;padding:14px 74px 14px 16px;
+    border:2px solid var(--line);border-radius:14px;outline:none;color:var(--ink);
+    -moz-appearance:textfield;appearance:textfield;background:#fff;
+  }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]:focus{border-color:var(--ink)}
+  .unit{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+    color:var(--muted);font-size:15px;font-weight:600;pointer-events:none}
+  button{
+    border:0;border-radius:14px;background:var(--red);color:#fff;
+    font-size:17px;font-weight:700;padding:14px 20px;cursor:pointer;white-space:nowrap;
+  }
+  button:active{transform:scale(.98)}
+  .err{color:var(--red-dark);font-size:14px;margin-top:10px;display:none}
+
+  /* ---------- Verdict ---------- */
+  #results{display:none}
+  .verdict{border-radius:var(--radius);padding:22px;margin-top:16px;text-align:center}
+  .verdict.good{background:var(--green-bg)}
+  .verdict.bad{background:var(--red-bg)}
+  .verdict.warn{background:var(--amber-bg)}
+  .verdict .emoji{font-size:34px;line-height:1}
+  .verdict h2{margin:8px 0 4px;font-size:24px}
+  .verdict .big{font-size:40px;font-weight:800;line-height:1.1;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+  .verdict p{margin:6px auto 0;color:#333;font-size:15.5px;line-height:1.5;max-width:480px}
+  .verdict.good .big{color:var(--green)}
+  .verdict.bad .big{color:var(--red-dark)}
+  .verdict.warn .big{color:var(--amber)}
+
+  /* ---------- Progress bar ---------- */
+  .bar-label{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);margin:4px 0 8px}
+  .bar-label b{color:var(--ink)}
+  .bar{position:relative;height:16px;background:#e9e9ec;border-radius:999px;overflow:visible}
+  .bar-fill{height:100%;border-radius:999px;background:var(--ink);width:0%;transition:width .4s ease}
+  .bar-fill.over{background:var(--red)}
+  .marker{position:absolute;top:-5px;width:3px;height:26px;background:var(--red);border-radius:2px}
+  .marker::after{content:"allowed by today";position:absolute;top:-19px;left:50%;transform:translateX(-50%);
+    font-size:11.5px;font-weight:700;color:var(--red);white-space:nowrap}
+  .bar-zone{margin-top:30px}
+
+  /* ---------- Stat grid ---------- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .stat{background:var(--card);border-radius:var(--radius);box-shadow:0 2px 14px rgba(0,0,0,.06);padding:18px}
+  .stat .k{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .stat .v{font-size:29px;font-weight:800;margin:6px 0 4px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .stat .d{font-size:13.5px;color:var(--muted);line-height:1.45;margin:0}
+  .stat.wide{grid-column:1/-1}
+  .stat .v.red{color:var(--red-dark)}
+  .stat .v.green{color:var(--green)}
+  @media (max-width:430px){
+    .grid{grid-template-columns:1fr}
+    .input-row{flex-direction:column}
+    button{width:100%}
+    h1{font-size:26px}
+    .verdict .big{font-size:33px}
+  }
+
+  /* ---------- How it works ---------- */
+  .how h3{margin:0 0 10px;font-size:16px}
+  .how ol{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.6}
+  .how ol b{color:var(--ink)}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:22px;line-height:1.6}
+</style>
 </head>
 <body>
-    <div class="calculator-container">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h2 class="mb-0">Model Y Lease Mileage Calculator</h2>
-            </div>
-            <div class="card-body">
-                <form id="mileageForm">
-                    <div class="mb-3">
-                        <label for="currentMiles" class="form-label">Current Odometer Reading:</label>
-                        <input 
-                            type="number" 
-                            class="form-control" 
-                            id="currentMiles" 
-                            inputmode="numeric"
-                            placeholder="Enter current mileage" 
-                            min="0" 
-                            step="1" 
-                            required
-                        >
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Calculate Mileage</button>
-                </form>
-                
-                <div id="results" class="mt-4 d-none">
-                    <div class="alert" id="resultAlert" role="alert">
-                        <h4 class="alert-heading">Mileage Status</h4>
-                        <p id="mileageResult"></p>
-                        <p id="dailyStatus"></p>
-                        <p id="remainingMiles"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer text-muted">
-                Lease Start: Jan 21, 2025 | 3-Year Term | 12,000 miles/year
-            </div>
+<div class="wrap">
+
+  <header>
+    <div class="car">Tesla Model Y &middot; Lease</div>
+    <h1>Am I on track with my miles?</h1>
+    <p class="sub">Type in what your odometer says today. You&rsquo;ll see, in plain numbers, whether you&rsquo;re ahead of pace, behind it, and how much you can drive from here.</p>
+    <div class="chips">
+      <span class="chip">Lease started <b>Jan 21, 2025</b></span>
+      <span class="chip">Lease ends <b>Jan 21, 2028</b></span>
+      <span class="chip"><b>36,000</b> miles total</span>
+      <span class="chip"><b>12,000</b> miles / year</span>
+    </div>
+  </header>
+
+  <div class="card">
+    <form id="form" novalidate>
+      <label for="miles">What does your odometer say today?</label>
+      <p class="hint">You&rsquo;ll find it on the car&rsquo;s screen or in the Tesla app, under the car&rsquo;s name.</p>
+      <div class="input-row">
+        <div class="input-wrap">
+          <input type="number" id="miles" inputmode="numeric" min="0" step="1" placeholder="e.g. 18,500" autocomplete="off">
+          <span class="unit">miles</span>
         </div>
+        <button type="submit">Check my miles</button>
+      </div>
+      <div class="err" id="err">Please enter the number from your odometer.</div>
+    </form>
+  </div>
+
+  <div id="results">
+    <div class="verdict" id="verdict">
+      <div class="emoji" id="vEmoji"></div>
+      <h2 id="vTitle"></h2>
+      <div class="big" id="vBig"></div>
+      <p id="vText"></p>
     </div>
 
-    <!-- Bootstrap 5.3 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.getElementById('mileageForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Fixed lease parameters
-            const yearlyMiles = 12000;
-            const leaseYears = 3;
-            const totalAllowedMiles = yearlyMiles * leaseYears;
-            const currentMiles = parseFloat(document.getElementById('currentMiles').value);
-            
-            // Calculate days passed (Jan 21, 2025 to current date in ET)
-            const startDate = new Date('2025-01-21T00:00:00-05:00'); // ET is UTC-5
-            const currentDate = new Date(); // Use current date/time
-            currentDate.setHours(0, 0, 0, 0); // Set to midnight ET
-            const msPerDay = 1000 * 60 * 60 * 24;
-            const daysPassed = Math.floor((currentDate - startDate) / msPerDay);
-            const totalLeaseDays = 365 * leaseYears; // Accounting for non-leap years
-            
-            // Calculate mileage metrics
-            const dailyAllowance = yearlyMiles / 365;
-            const allowedMilesToDate = dailyAllowance * daysPassed;
-            const mileDifference = currentMiles - allowedMilesToDate;
-            const isOver = mileDifference > 0;
-            const remainingDays = totalLeaseDays - daysPassed;
-            const remainingAllowedMiles = totalAllowedMiles - currentMiles;
-            const remainingDailyAverage = remainingDays > 0 ? remainingAllowedMiles / remainingDays : 0;
-            
-            // Update UI elements
-            const resultAlert = document.getElementById('resultAlert');
-            const mileageResult = document.getElementById('mileageResult');
-            const dailyStatus = document.getElementById('dailyStatus');
-            const remainingMiles = document.getElementById('remainingMiles');
-            const resultsDiv = document.getElementById('results');
-            
-            // Display results
-            resultsDiv.classList.remove('d-none');
-            resultAlert.classList.remove('alert-success', 'alert-danger');
-            resultAlert.classList.add(isOver ? 'alert-danger' : 'alert-success');
-            
-            mileageResult.textContent = `You are ${Math.abs(mileDifference.toFixed(1))} miles 
-                ${isOver ? 'over' : 'under'} your allowed mileage to date.`;
-            dailyStatus.textContent = `Daily allowance: ${dailyAllowance.toFixed(1)} miles/day | 
-                Days since lease start: ${daysPassed}`;
-            remainingMiles.textContent = `Remaining: ${remainingAllowedMiles.toFixed(1)} miles 
-                (${remainingDailyAverage.toFixed(1)} miles/day average for ${remainingDays} days)`;
-        });
-    </script>
+    <div class="card">
+      <div class="bar-label"><span>Your miles so far: <b id="barDriven"></b></span><span>Total allowed: <b>36,000</b></span></div>
+      <div class="bar-zone">
+        <div class="bar">
+          <div class="bar-fill" id="barFill"></div>
+          <div class="marker" id="barMarker"></div>
+        </div>
+      </div>
+      <p class="hint" style="margin:12px 0 0">The red line is how many miles you were allowed to have used <b>by today</b> to be exactly on pace. If your bar stops before the line, you&rsquo;re under. Past the line, you&rsquo;re over.</p>
+    </div>
+
+    <div class="grid">
+      <div class="stat">
+        <div class="k">Miles left</div>
+        <div class="v" id="sLeft"></div>
+        <p class="d">Miles you can still drive before you hit the 36,000-mile lease limit.</p>
+      </div>
+      <div class="stat">
+        <div class="k">Per day from now on</div>
+        <div class="v" id="sPerDay"></div>
+        <p class="d">Drive about this many miles a day, on average, and you&rsquo;ll finish right at 36,000.</p>
+      </div>
+      <div class="stat">
+        <div class="k">Days left on lease</div>
+        <div class="v" id="sDays"></div>
+        <p class="d">Your lease ends Jan 21, 2028. That&rsquo;s the day the 36,000-mile limit is measured.</p>
+      </div>
+      <div class="stat">
+        <div class="k">Allowed by today</div>
+        <div class="v" id="sAllowed"></div>
+        <p class="d">How many miles you were allowed to have driven by today to be exactly on pace (about 33 miles a day since the lease started).</p>
+      </div>
+      <div class="stat wide">
+        <div class="k">If you keep driving at this pace&hellip;</div>
+        <div class="v" id="sProjected"></div>
+        <p class="d" id="sProjectedNote"></p>
+      </div>
+    </div>
+
+    <div class="card how">
+      <h3>How to read this</h3>
+      <ol>
+        <li><b>Under is good.</b> It means you&rsquo;ve driven less than your pace allows, so you have spare miles.</li>
+        <li><b>Watch the &ldquo;per day from now on&rdquo; number.</b> Staying at or under it keeps you inside the limit to the very end.</li>
+        <li><b>The pace warning matters most.</b> Even if you&rsquo;re under today, a high daily pace can still put you over by Jan 2028.</li>
+      </ol>
+    </div>
+  </div>
+
+  <footer>
+    Model Y lease &middot; Jan 21, 2025 &ndash; Jan 21, 2028 &middot; 12,000 miles a year &middot; 36,000 miles total<br>
+    Going over the total can mean extra charges at lease-end. This page is a guide, not a bill.
+  </footer>
+</div>
+
+<script>
+  // Lease facts (unchanged from the original app)
+  var START = new Date(2025, 0, 21);        // Jan 21, 2025 (local midnight)
+  var END   = new Date(2028, 0, 21);        // Jan 21, 2028
+  var TOTAL_ALLOWED = 36000;                // 12,000/yr x 3 years
+  var MS_DAY = 1000 * 60 * 60 * 24;
+
+  var form = document.getElementById('form');
+  var input = document.getElementById('miles');
+  var err = document.getElementById('err');
+  var results = document.getElementById('results');
+
+  function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+  function fmt1(n){ return (Math.round(n * 10) / 10).toLocaleString('en-US'); }
+
+  function todayMidnight(){
+    var d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function calculate(){
+    var raw = input.value.replace(/,/g, '');
+    var current = parseFloat(raw);
+    if (isNaN(current) || current < 0){
+      err.style.display = 'block';
+      results.style.display = 'none';
+      return;
+    }
+    err.style.display = 'none';
+    try { localStorage.setItem('modely-odometer', String(current)); } catch(e){}
+
+    var totalDays = Math.round((END - START) / MS_DAY);              // 1,095
+    var daysPassed = Math.round((todayMidnight() - START) / MS_DAY);
+    if (daysPassed < 0) daysPassed = 0;
+    if (daysPassed > totalDays) daysPassed = totalDays;
+    var daysLeft = totalDays - daysPassed;
+
+    var allowedToday = TOTAL_ALLOWED * daysPassed / totalDays;      // pace line for today
+    var diff = current - allowedToday;                              // + = over pace
+    var isOver = diff > 0;
+    var usedUp = current >= TOTAL_ALLOWED;
+
+    var milesLeft = TOTAL_ALLOWED - current;
+    var perDay = daysLeft > 0 ? milesLeft / daysLeft : 0;
+    if (perDay < 0) perDay = 0;
+
+    // Projection: same daily pace so far, carried to the end of the lease
+    var projected = daysPassed > 0 ? current / daysPassed * totalDays : current;
+    var projectedOver = projected - TOTAL_ALLOWED;
+
+    // --- Verdict ---
+    var verdict = document.getElementById('verdict');
+    var vEmoji = document.getElementById('vEmoji');
+    var vTitle = document.getElementById('vTitle');
+    var vBig = document.getElementById('vBig');
+    var vText = document.getElementById('vText');
+    verdict.className = 'verdict ' + (usedUp ? 'bad' : (isOver ? 'warn' : 'good'));
+
+    if (usedUp){
+      vEmoji.textContent = '🛑';
+      vTitle.textContent = 'You\u2019ve passed the lease limit';
+      vBig.textContent = fmt(current - TOTAL_ALLOWED) + ' miles over 36,000';
+      vText.textContent = 'Your odometer is already past the 36,000-mile total for the whole lease. Every mile from here adds to what you may owe at lease-end.';
+    } else if (isOver){
+      vEmoji.textContent = '⚠️';
+      vTitle.textContent = 'You\u2019re driving faster than the lease allows';
+      vBig.textContent = fmt(diff) + ' miles over pace';
+      vText.textContent = 'By today you were allowed ' + fmt(allowedToday) + ' miles and you\u2019ve driven ' + fmt(current) + '. Not a problem yet \u2014 the limit is only measured at the end \u2014 but you\u2019ll need to average no more than ' + fmt1(perDay) + ' miles a day from now on to finish at 36,000.';
+    } else {
+      vEmoji.textContent = '✅';
+      vTitle.textContent = 'You\u2019re in good shape';
+      vBig.textContent = fmt(-diff) + ' miles under pace';
+      vText.textContent = 'By today you were allowed ' + fmt(allowedToday) + ' miles and you\u2019ve only driven ' + fmt(current) + '. You have ' + fmt(milesLeft) + ' miles left, and you can average up to ' + fmt1(perDay) + ' miles a day for the rest of the lease.';
+    }
+
+    // --- Progress bar (share of the 36,000 total) ---
+    var pct = Math.min(100, current / TOTAL_ALLOWED * 100);
+    var fill = document.getElementById('barFill');
+    fill.style.width = pct + '%';
+    fill.className = 'bar-fill' + (isOver || usedUp ? ' over' : '');
+    document.getElementById('barMarker').style.left = (allowedToday / TOTAL_ALLOWED * 100) + '%';
+    document.getElementById('barDriven').textContent = fmt(current) + ' (' + fmt1(pct) + '%)';
+
+    // --- Stat cards ---
+    document.getElementById('sLeft').textContent = usedUp ? '0' : fmt(milesLeft);
+    document.getElementById('sPerDay').textContent = fmt1(perDay) + ' mi/day';
+    document.getElementById('sDays').textContent = fmt(daysLeft);
+    document.getElementById('sAllowed').textContent = fmt(allowedToday);
+
+    var projEl = document.getElementById('sProjected');
+    var projNote = document.getElementById('sProjectedNote');
+    projEl.textContent = 'About ' + fmt(projected) + ' miles at lease-end';
+    projEl.className = 'v ' + (projectedOver > 0 ? 'red' : 'green');
+    projNote.textContent = projectedOver > 0
+      ? 'That\u2019s about ' + fmt(projectedOver) + ' miles over the 36,000 limit. Easing down to ' + fmt1(perDay) + ' miles a day from now fixes it.'
+      : 'That\u2019s about ' + fmt(-projectedOver) + ' miles under the 36,000 limit. You\u2019re on track to hand the car back inside your miles.';
+
+    results.style.display = 'block';
+  }
+
+  form.addEventListener('submit', function(e){ e.preventDefault(); calculate(); });
+  input.addEventListener('input', function(){
+    if (input.value.trim() !== '') calculate();
+  });
+
+  // Remember the last reading on this device
+  try {
+    var saved = localStorage.getItem('modely-odometer');
+    if (saved){ input.value = saved; calculate(); }
+  } catch(e){}
+</script>
 </body>
 </html>
